@@ -1,0 +1,4 @@
+customer-api:
+  seed-file: classpath:data/customers.json
+  demo-ui:
+    enabled: true

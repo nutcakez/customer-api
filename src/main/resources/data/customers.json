@@ -1,0 +1,10 @@
+[
+  { "firstName": "Anna",    "lastName": "Schmidt",  "email": "anna.schmidt@example.com",   "status": "ACTIVE",   "department": "sales" },
+  { "firstName": "Ben",     "lastName": "Müller",   "email": "ben.mueller@example.com",    "status": "ACTIVE",   "department": "sales" },
+  { "firstName": "Clara",   "lastName": "Weber",    "email": "clara.weber@example.com",    "status": "INACTIVE", "department": "sales" },
+  { "firstName": "David",   "lastName": "Fischer",  "email": "david.fischer@example.com",  "status": "ACTIVE",   "department": "marketing" },
+  { "firstName": "Eva",     "lastName": "Wagner",   "email": "eva.wagner@example.com",     "status": "ACTIVE",   "department": "marketing" },
+  { "firstName": "Felix",   "lastName": "Becker",   "email": "felix.becker@example.com",   "status": "INACTIVE", "department": "marketing" },
+  { "firstName": "Greta",   "lastName": "Hoffmann", "email": "greta.hoffmann@example.com", "status": "ACTIVE",   "department": "engineering" },
+  { "firstName": "Hannes",  "lastName": "Koch",     "email": "hannes.koch@example.com",    "status": "ACTIVE",   "department": "engineering" }
+]

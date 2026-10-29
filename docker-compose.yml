@@ -1,0 +1,28 @@
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: customer-api-keycloak
+    command: start-dev --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    ports:
+      - "8180:8080"
+    volumes:
+      - ./keycloak/customer-realm.json:/opt/keycloak/data/import/customer-realm.json:ro
+
+  # Only started with: docker compose --profile app up --build
+  app:
+    build: .
+    container_name: customer-api-app
+    profiles: ["app"]
+    depends_on:
+      - keycloak
+    environment:
+      SPRING_PROFILES_ACTIVE: demo
+      # Tokens are issued to the browser via localhost:8180, so that stays the expected issuer...
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8180/realms/customer-realm
+      # ...but inside the Docker network the signing keys are fetched from the keycloak container.
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/customer-realm/protocol/openid-connect/certs
+    ports:
+      - "8080:8080"

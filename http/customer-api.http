@@ -1,0 +1,92 @@
+### Requires: docker compose up -d  (Keycloak on :8180) and the app running on :8080 with the demo profile
+###   mvn spring-boot:run -Dspring-boot.run.profiles=demo  (seeds the customers used below)
+@keycloak = http://localhost:8180/realms/customer-realm/protocol/openid-connect/token
+@api = http://localhost:8080/api/customers
+
+### ---------- Authentication ----------
+
+### Obtain token: ada.admin (customer-admin)
+# @name admin
+POST {{keycloak}}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id=customer-api-client&username=ada.admin&password=password
+
+### Obtain token: sally.sales (customer-reader, department=sales)
+# @name salesReader
+POST {{keycloak}}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id=customer-api-client&username=sally.sales&password=password
+
+### Obtain token: nora.norole (valid token, no role)
+# @name noRole
+POST {{keycloak}}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id=customer-api-client&username=nora.norole&password=password
+
+### Access without token -> 401
+GET {{api}}
+
+### Valid token but no role -> 403
+GET {{api}}
+Authorization: Bearer {{noRole.response.body.access_token}}
+
+### ---------- customer-reader ----------
+
+### List customers -> 200, only department "sales"
+GET {{api}}
+Authorization: Bearer {{salesReader.response.body.access_token}}
+
+### Read customer of own department (id 1 = sales) -> 200
+GET {{api}}/1
+Authorization: Bearer {{salesReader.response.body.access_token}}
+
+### Read customer of other department (id 4 = marketing) -> 403
+GET {{api}}/4
+Authorization: Bearer {{salesReader.response.body.access_token}}
+
+### Try to create a customer -> 403
+POST {{api}}
+Authorization: Bearer {{salesReader.response.body.access_token}}
+Content-Type: application/json
+
+{"firstName":"Not","lastName":"Allowed","email":"not.allowed@example.com","status":"ACTIVE","department":"sales"}
+
+### Try to delete a customer -> 403
+DELETE {{api}}/1
+Authorization: Bearer {{salesReader.response.body.access_token}}
+
+### ---------- customer-admin (CRUD) ----------
+
+### List all customers (all departments) -> 200
+GET {{api}}
+Authorization: Bearer {{admin.response.body.access_token}}
+
+### Create -> 201
+# @name created
+POST {{api}}
+Authorization: Bearer {{admin.response.body.access_token}}
+Content-Type: application/json
+
+{"firstName":"Max","lastName":"Mustermann","email":"max.mustermann@example.com","status":"ACTIVE","department":"sales"}
+
+### Read -> 200
+GET {{api}}/{{created.response.body.id}}
+Authorization: Bearer {{admin.response.body.access_token}}
+
+### Update -> 200
+PUT {{api}}/{{created.response.body.id}}
+Authorization: Bearer {{admin.response.body.access_token}}
+Content-Type: application/json
+
+{"firstName":"Max","lastName":"Mustermann","email":"max.mustermann@example.com","status":"INACTIVE","department":"marketing"}
+
+### Delete -> 204
+DELETE {{api}}/{{created.response.body.id}}
+Authorization: Bearer {{admin.response.body.access_token}}
+
+### Read deleted -> 404
+GET {{api}}/{{created.response.body.id}}
+Authorization: Bearer {{admin.response.body.access_token}}
